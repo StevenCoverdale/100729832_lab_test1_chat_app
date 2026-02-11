@@ -1,10 +1,14 @@
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
+
 const connectDB = require('./config/db');
-const bcrypt = require('bcryptjs');
+const GroupMessage = require('./models/GroupMessage');
+const PrivateMessage = require('./models/PrivateMessage');
 const User = require('./models/User');
 
+const bcrypt = require('bcryptjs');
+const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +19,8 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
-
+app.use('/public', express.static('public'));
+app.use('/views', express.static('views'));
 // Basic test route
 app.get('/', (req, res) => {
   res.send('Chat app backend is running');
