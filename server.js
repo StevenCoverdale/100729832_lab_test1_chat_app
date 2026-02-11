@@ -53,6 +53,36 @@ app.post('/signup', async (req, res) => {
   }
 });
 
+// Login route
+app.post('/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Find user
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid username or password' });
+    }
+
+    // Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid username or password' });
+    }
+
+    res.status(200).json({
+      message: 'Login successful',
+      username: user.username,
+      firstname: user.firstname,
+      lastname: user.lastname
+    });
+
+  } catch (err) {
+    console.error('Login error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 // Start server
 const PORT = 3000;
