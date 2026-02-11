@@ -83,6 +83,76 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Room List
+app.get('/rooms', (req, res) => {
+  const rooms = ['devops', 'cloud computing', 'covid19', 'sports', 'nodeJS'];
+  res.json(rooms);
+});
+
+// Socket setup
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  // Join room
+  socket.on('joinRoom', (room) => {
+    socket.join(room);
+    console.log(`User ${socket.id} joined room: ${room}`);
+  });
+
+  // Leave room
+  socket.on('leaveRoom', (room) => {
+    socket.leave(room);
+    console.log(`User ${socket.id} left room: ${room}`);
+  });
+
+  // Group message
+  socket.on('groupMessage', async (data) => {
+    const { from_user, room, message } = data;
+
+    const newMsg = new GroupMessage({
+      from_user,
+      room,
+      message
+    });
+
+    await newMsg.save();
+
+    io.to(room).emit('groupMessage', newMsg);
+  });
+ // Private message
+  socket.on('privateMessage', async (data) => {
+    const { from_user, to_user, message } = data;
+
+    const newMsg = new PrivateMessage({
+      from_user,
+      to_user,
+      message
+    });
+
+    await newMsg.save();
+
+    io.emit(`privateMessage:${to_user}`, newMsg);
+  });
+
+  // Typing indicator
+  socket.on('typing', (data) => {
+    const { room, username } = data;
+    socket.to(room).emit('typing', username);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+
 
 // Start server
 const PORT = 3000;
