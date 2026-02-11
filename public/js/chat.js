@@ -36,7 +36,7 @@ let currentRoom = null;
 // -----------------------------
 // JOIN ROOM
 // -----------------------------
-document.getElementById("joinRoomBtn").addEventListener("click", () => {
+document.getElementById("joinRoomBtn").addEventListener("click", async () => {
   const room = document.getElementById("roomSelect").value;
 
   if (currentRoom) {
@@ -46,7 +46,21 @@ document.getElementById("joinRoomBtn").addEventListener("click", () => {
   currentRoom = room;
   socket.emit("joinRoom", room);
 
-  document.getElementById("groupMessages").innerHTML = "";
+  // Clear old messages
+  const box = document.getElementById("groupMessages");
+  box.innerHTML = "";
+
+  // Load message history
+  const response = await fetch(`http://localhost:3000/messages/${room}`);
+  const history = await response.json();
+
+  history.forEach(msg => {
+    const p = document.createElement("p");
+    p.textContent = `${msg.from_user}: ${msg.message}`;
+    box.appendChild(p);
+  });
+
+  box.scrollTop = box.scrollHeight;
 });
 
 // -----------------------------

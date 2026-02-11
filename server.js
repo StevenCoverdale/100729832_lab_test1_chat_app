@@ -94,6 +94,16 @@ app.get('/rooms', (req, res) => {
   res.json(rooms);
 });
 
+app.get('/messages/:room', async (req, res) => {
+  try {
+    const room = req.params.room;
+    const messages = await GroupMessage.find({ room }).sort({ date_sent: 1 });
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ message: 'Error loading messages' });
+  }
+});
+
 // Socket setup
 const io = new Server(server, {
   cors: {
